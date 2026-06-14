@@ -1,17 +1,18 @@
-const CACHE_NAME = 'firefly-lite-v2';
+const CACHE_NAME = 'firefly-lite-v3';
 const OFFLINE_URL = './';
 
 const PRECACHE_URLS = [
   './',
   './manifest.json',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'
+  './icon.svg',
+  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       return cache.addAll(PRECACHE_URLS).catch(() => {
-        // Some URLs may fail (cross-origin), that's OK
         return cache.add(OFFLINE_URL);
       });
     })
@@ -34,7 +35,6 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(cached => {
       const fetchPromise = fetch(event.request).then(response => {
-        // Update cache with fresh response
         if (response && response.status === 200) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));

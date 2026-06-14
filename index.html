@@ -5,909 +5,670 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f1117">
+<meta name="theme-color" content="#09090f">
 <title>Firefly Lite</title>
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230f1117' width='100' height='100' rx='20'/><text x='50' y='62' font-size='50' text-anchor='middle'>🔥</text></svg>">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--bg:#0f1117;--s:#1a1d27;--s2:#242736;--bd:#2e3148;--t:#e4e6f0;--t2:#8b8fa8;
---acc:#f59e0b;--g:#22c55e;--r:#ef4444;--b:#3b82f6;--p:#a855f7;--rad:14px;
---safe-bottom:env(safe-area-inset-bottom,0px)}
+:root{
+--bg:#09090f;--s:#111118;--s2:#191924;--s3:#222234;--bd:rgba(255,255,255,.06);
+--bd2:rgba(255,255,255,.1);--t:#eef0f9;--t2:#7b7f96;--t3:#454865;
+--acc:#f59e0b;--acc2:#fbbf24;--g:#10b981;--g2:#34d399;--r:#ef4444;--r2:#f87171;
+--b:#6366f1;--b2:#818cf8;--p:#a855f7;--p2:#c084fc;
+--grad-acc:linear-gradient(135deg,#f59e0b,#f97316);
+--grad-g:linear-gradient(135deg,#10b981,#059669);
+--grad-r:linear-gradient(135deg,#ef4444,#dc2626);
+--grad-b:linear-gradient(135deg,#6366f1,#4f46e5);
+--rad:16px;--rad-sm:10px;--rad-lg:22px;
+--safe-b:env(safe-area-inset-bottom,0px);
+--shadow:0 8px 32px rgba(0,0,0,.5);
+}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro','Segoe UI',system-ui,sans-serif;
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','SF Pro','Segoe UI',system-ui,sans-serif;
 background:var(--bg);color:var(--t);min-height:100vh;min-height:100dvh;overflow-x:hidden;
-padding-bottom:calc(70px + var(--safe-bottom))}
-.tab-bar{position:fixed;bottom:0;left:0;right:0;height:calc(60px + var(--safe-bottom));
-padding-bottom:var(--safe-bottom);background:var(--s);border-top:1px solid var(--bd);
-display:flex;z-index:100;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+padding-bottom:calc(72px + var(--safe-b));-webkit-font-smoothing:antialiased}
+
+/* ── Tab Bar ── */
+.tab-bar{position:fixed;bottom:0;left:0;right:0;height:calc(64px + var(--safe-b));
+padding-bottom:var(--safe-b);background:rgba(17,17,24,.88);
+border-top:1px solid var(--bd);display:flex;z-index:100;
+backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)}
 .tab-bar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-gap:2px;color:var(--t2);text-decoration:none;font-size:10px;transition:color .2s;padding:6px 0;cursor:pointer}
-.tab-bar a .ico{font-size:22px;line-height:1}
+gap:3px;color:var(--t3);text-decoration:none;font-size:10px;font-weight:600;
+transition:all .25s;padding:6px 0;cursor:pointer;position:relative}
+.tab-bar a .ico{width:22px;height:22px;transition:transform .25s}
+.tab-bar a .ico svg{width:100%;height:100%}
 .tab-bar a.active{color:var(--acc)}
-.tab-bar a:active{transform:scale(.92)}
-.page{display:none;padding:16px;max-width:600px;margin:0 auto}
+.tab-bar a.active .ico{transform:scale(1.15)}
+.tab-bar a.active::before{content:'';position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+width:24px;height:3px;background:var(--grad-acc);border-radius:0 0 3px 3px}
+.tab-bar a:active{transform:scale(.88)}
+
+/* ── Pages ── */
+.page{display:none;padding:16px 16px 20px;max-width:600px;margin:0 auto;animation:fadeUp .35s ease}
 .page.active{display:block}
-.page-title{font-size:20px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
-.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.stat-card{background:var(--s);border:1px solid var(--bd);border-radius:var(--rad);padding:14px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.page-title{font-size:24px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;
+justify-content:space-between;letter-spacing:-.5px}
+
+/* ── Stat Cards ── */
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.stat-card{background:var(--s);border:1px solid var(--bd);border-radius:var(--rad);
+padding:16px 18px;position:relative;overflow:hidden;transition:transform .2s}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:.9}
+.stat-card.si::before{background:var(--grad-g)}.stat-card.se::before{background:var(--grad-r)}
+.stat-card.sn::before{background:var(--grad-acc)}
 .stat-card.full{grid-column:1/-1}
-.stat-card .lb{font-size:11px;color:var(--t2);margin-bottom:2px}
-.stat-card .vl{font-size:22px;font-weight:700}
-.stat-card .vl.g{color:var(--g)}.stat-card .vl.r{color:var(--r)}.stat-card .vl.acc{color:var(--acc)}
+.stat-card .lb{font-size:11px;color:var(--t2);margin-bottom:6px;font-weight:600;letter-spacing:.8px;text-transform:uppercase}
+.stat-card .vl{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.stat-card .vl.g{color:var(--g2)}.stat-card .vl.r{color:var(--r2)}.stat-card .vl.acc{color:var(--acc2)}
+
+/* ── List Items ── */
 .list-item{background:var(--s);border:1px solid var(--bd);border-radius:var(--rad);
-padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+padding:14px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;
+transition:transform .15s,background .15s}
+.list-item:active{transform:scale(.985);background:var(--s2)}
 .list-item .left{flex:1;min-width:0}
 .list-item .payee{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.list-item .meta{font-size:11px;color:var(--t2);margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.list-item .amt{font-size:16px;font-weight:700;text-align:right;white-space:nowrap;margin-left:10px}
-.amt.r{color:var(--r)}.amt.g{color:var(--g)}
-.badge{display:inline-block;padding:1px 8px;border-radius:99px;font-size:10px;font-weight:500;
-background:var(--s2);border:1px solid var(--bd)}
-.badge-c{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);color:var(--b)}
-.badge-t{background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:var(--p)}
-.badge-ok{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:var(--g)}
-.badge-over{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:var(--r)}
-.badge-warn{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:var(--acc)}
-.btn{padding:10px 18px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);
-color:var(--t);font-size:14px;cursor:pointer;font-weight:500;transition:all .15s;min-height:44px}
-.btn:active{transform:scale(.96)}
-.btn-p{background:var(--acc);color:#000;border-color:var(--acc);font-weight:600}
-.btn-d{color:var(--r);font-size:12px;min-height:auto;padding:6px 12px}
-.btn-block{display:block;width:100%;text-align:center}
-.fg{margin-bottom:14px}
-.fg label{display:block;font-size:12px;color:var(--t2);margin-bottom:5px}
-.fg input,.fg select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);
-background:var(--s2);color:var(--t);font-size:15px;outline:none;min-height:44px}
-.fg input:focus,.fg select:focus{border-color:var(--acc)}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;z-index:200;
-overflow-y:auto;padding:20px;padding-top:60px}
-.modal-overlay.show{display:block}
-.modal-box{background:var(--s);border:1px solid var(--bd);border-radius:var(--rad);
-padding:20px;max-width:500px;margin:0 auto}
-.modal-box h2{font-size:18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
-.modal-close{font-size:24px;color:var(--t2);cursor:pointer;padding:4px 8px;line-height:1}
-.upload-zone{border:2px dashed var(--bd);border-radius:var(--rad);padding:40px 20px;
-text-align:center;cursor:pointer;transition:all .2s}
-.upload-zone:active,.upload-zone.dragover{border-color:var(--acc);background:rgba(245,158,11,.05)}
-.upload-zone .ico{font-size:40px;margin-bottom:8px}
-.upload-zone p{color:var(--t2);font-size:13px}
-.chart-wrap{background:var(--s);border:1px solid var(--bd);border-radius:var(--rad);padding:14px;margin-bottom:14px}
-.chart-wrap h3{font-size:12px;color:var(--t2);margin-bottom:10px}
-.budget-card{background:var(--s);border:1px solid var(--bd);border-radius:var(--rad);padding:14px;margin-bottom:10px}
-.budget-card .top{display:flex;justify-content:space-between;margin-bottom:8px}
-.budget-card .cat{font-weight:600;font-size:14px}
+.list-item .meta{font-size:11px;color:var(--t2);margin-top:4px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.list-item .amt{font-size:16px;font-weight:700;text-align:right;white-space:nowrap;margin-left:12px;letter-spacing:-.3px}
+.amt.r{color:var(--r2)}.amt.g{color:var(--g2)}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;letter-spacing:.2px}
+.badge-c{background:rgba(99,102,241,.12);color:var(--b2)}
+.badge-t{background:rgba(168,85,247,.12);color:var(--p2)}
+
+/* ── Buttons ── */
+.btn{padding:12px 20px;border-radius:var(--rad-sm);border:1px solid var(--bd2);background:var(--s2);
+color:var(--t);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;min-height:46px;
+display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.96);background:var(--s3)}
+.btn-p{background:var(--grad-acc);color:#000;border:none;font-weight:700;
+box-shadow:0 4px 20px rgba(245,158,11,.2)}
+.btn-p:active{box-shadow:0 2px 8px rgba(245,158,11,.15);filter:brightness(.95)}
+.btn-d{color:var(--r2);font-size:12px;min-height:auto;padding:8px 14px;border-color:rgba(239,68,68,.15)}
+.btn-block{display:flex;width:100%;text-align:center}
+
+/* ── Forms ── */
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:12px;color:var(--t2);margin-bottom:6px;font-weight:600}
+.fg input,.fg select{width:100%;padding:13px 14px;border-radius:var(--rad-sm);border:1px solid var(--bd2);
+background:var(--s2);color:var(--t);font-size:15px;outline:none;min-height:46px;transition:all .2s}
+.fg input:focus,.fg select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(245,158,11,.08)}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:200;
+overflow-y:auto;padding:20px;padding-top:50px;
+backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal-overlay.show{display:block;animation:fadeUp .25s ease}
+.modal-box{background:var(--s);border:1px solid var(--bd2);border-radius:var(--rad-lg);
+padding:24px;max-width:500px;margin:0 auto;box-shadow:var(--shadow)}
+.modal-box h2{font-size:18px;font-weight:800;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.modal-close{font-size:18px;color:var(--t2);cursor:pointer;width:36px;height:36px;
+display:flex;align-items:center;justify-content:center;border-radius:50%;
+background:var(--s2);transition:all .2s}
+.modal-close:active{background:var(--s3);transform:scale(.9)}
+
+/* ── Upload Zone ── */
+.upload-zone{border:2px dashed var(--bd2);border-radius:var(--rad-lg);padding:44px 20px;
+text-align:center;cursor:pointer;transition:all .3s;background:rgba(255,255,255,.01)}
+.upload-zone:active,.upload-zone.dragover{border-color:var(--acc);background:rgba(245,158,11,.03)}
+.upload-zone .uico{margin-bottom:14px;opacity:.5}
+.upload-zone p{color:var(--t2);font-size:13px;line-height:1.7}
+.upload-zone .hint{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* ── Charts ── */
+.chart-wrap{background:var(--s);border:1px solid var(--bd);border-radius:var(--rad);
+padding:16px;margin-bottom:14px}
+.chart-wrap h3{font-size:12px;color:var(--t2);margin-bottom:12px;font-weight:700;letter-spacing:.5px}
+
+/* ── Budget ── */
+.budget-card{background:var(--s);border:1px solid var(--bd);border-radius:var(--rad);
+padding:16px;margin-bottom:10px;transition:transform .15s}
+.budget-card:active{transform:scale(.985)}
+.budget-card .top{display:flex;justify-content:space-between;margin-bottom:10px;align-items:center}
+.budget-card .cat{font-weight:700;font-size:14px}
 .budget-card .nums{font-size:12px;color:var(--t2)}
-.bar{height:8px;background:var(--s2);border-radius:4px;overflow:hidden}
-.bar .fill{height:100%;border-radius:4px;transition:width .5s}
-.fill.g{background:var(--g)}.fill.w{background:var(--acc)}.fill.r{background:var(--r)}
-select.month-sel{padding:6px 12px;border-radius:8px;border:1px solid var(--bd);
-background:var(--s2);color:var(--t);font-size:13px;min-height:auto}
-.sec-title{font-size:13px;font-weight:600;color:var(--t2);margin:20px 0 10px;text-transform:uppercase;letter-spacing:.5px}
+.bar{height:6px;background:var(--s3);border-radius:3px;overflow:hidden}
+.bar .fill{height:100%;border-radius:3px;transition:width .6s ease}
+.fill.g{background:var(--grad-g)}.fill.w{background:var(--grad-acc)}.fill.r{background:var(--grad-r)}
+
+/* ── Misc ── */
+select.month-sel{padding:7px 12px;border-radius:var(--rad-sm);border:1px solid var(--bd2);
+background:var(--s2);color:var(--t);font-size:13px;font-weight:500;min-height:auto;cursor:pointer}
+.sec-title{font-size:11px;font-weight:700;color:var(--t3);margin:26px 0 12px;text-transform:uppercase;letter-spacing:1.2px}
 .tags-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-.tag-chip{padding:8px 16px;border-radius:99px;font-size:13px;cursor:pointer;
-background:var(--s2);border:1px solid var(--bd);transition:all .15s;min-height:36px}
-.tag-chip:active,.tag-chip.active{background:rgba(168,85,247,.2);border-color:var(--p);color:var(--p)}
-.empty{text-align:center;padding:50px 20px;color:var(--t2)}
-.empty .ico{font-size:40px;margin-bottom:8px}
-.empty p{font-size:14px}
-.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);padding:10px 20px;
-background:var(--g);color:#000;border-radius:10px;font-size:13px;font-weight:600;
-z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1}
-.del-btn{color:var(--r);font-size:12px;cursor:pointer;padding:8px;opacity:.6}
-.del-btn:active{opacity:1}
-.fab{position:fixed;bottom:calc(80px + var(--safe-bottom));right:20px;width:56px;height:56px;
-border-radius:50%;background:var(--acc);color:#000;font-size:28px;font-weight:300;
+.tag-chip{padding:8px 16px;border-radius:99px;font-size:13px;font-weight:500;cursor:pointer;
+background:var(--s2);border:1px solid var(--bd);transition:all .2s;min-height:36px}
+.tag-chip:active,.tag-chip.active{background:rgba(168,85,247,.12);border-color:var(--p);color:var(--p2)}
+.empty{text-align:center;padding:56px 20px;color:var(--t3)}
+.empty p{font-size:14px;line-height:1.7;margin-top:8px}
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);
+padding:12px 24px;background:var(--grad-g);color:#000;border-radius:var(--rad-sm);
+font-size:13px;font-weight:700;z-index:300;opacity:0;transition:all .3s ease;
+pointer-events:none;box-shadow:0 4px 20px rgba(16,185,129,.3)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.del-btn{color:var(--t3);cursor:pointer;padding:6px;border-radius:50%;
+width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.del-btn:active{color:var(--r);background:rgba(239,68,68,.1)}
+
+/* ── FAB ── */
+.fab{position:fixed;bottom:calc(84px + var(--safe-b));right:20px;width:58px;height:58px;
+border-radius:50%;background:var(--grad-acc);color:#000;font-size:28px;font-weight:300;
 display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;
-box-shadow:0 4px 16px rgba(245,158,11,.4);z-index:90;transition:transform .15s}
-.fab:active{transform:scale(.9)}
-.install-banner{display:none;position:fixed;top:0;left:0;right:0;padding:12px 16px;
-background:var(--acc);color:#000;font-size:13px;font-weight:600;z-index:300;
+box-shadow:0 8px 28px rgba(245,158,11,.3);z-index:90;transition:all .2s}
+.fab:active{transform:scale(.85);box-shadow:0 4px 12px rgba(245,158,11,.2)}
+.fab svg{width:24px;height:24px}
+
+/* ── Install Banner ── */
+.install-banner{display:none;position:fixed;top:0;left:0;right:0;padding:14px 16px;
+background:var(--grad-acc);color:#000;font-size:13px;font-weight:700;z-index:300;
 text-align:center;cursor:pointer}
-.install-banner.show{display:block}
+.install-banner.show{display:block;animation:slideDown .4s ease}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:none}}
+
+/* ── Desktop ── */
 @media(min-width:768px){
-.tab-bar{display:none}
-body{padding-bottom:0;padding-left:200px}
-.desktop-nav{display:flex !important;position:fixed;left:0;top:0;bottom:0;width:200px;
-background:var(--s);border-right:1px solid var(--bd);flex-direction:column;padding:20px 0;z-index:10}
-.desktop-nav .logo{padding:0 16px 20px;font-size:17px;font-weight:700;color:var(--acc)}
-.desktop-nav a{display:flex;align-items:center;gap:10px;padding:11px 16px;color:var(--t2);
-text-decoration:none;font-size:14px;border-left:3px solid transparent;transition:all .2s;cursor:pointer}
+.tab-bar{display:none}body{padding-bottom:0;padding-left:220px}
+.desktop-nav{display:flex !important;position:fixed;left:0;top:0;bottom:0;width:220px;
+background:var(--s);border-right:1px solid var(--bd);flex-direction:column;padding:24px 0;z-index:10}
+.desktop-nav .logo{padding:0 20px 28px;font-size:18px;font-weight:800;display:flex;align-items:center;gap:10px;letter-spacing:-.3px}
+.desktop-nav .logo svg{width:34px;height:34px}
+.desktop-nav a{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--t2);
+text-decoration:none;font-size:14px;font-weight:500;border-left:3px solid transparent;transition:all .2s;cursor:pointer}
 .desktop-nav a:hover{background:var(--s2);color:var(--t)}
-.desktop-nav a.active{color:var(--acc);border-left-color:var(--acc);background:rgba(245,158,11,.08)}
-.page{max-width:700px;padding:24px}
-.fab{bottom:30px}
-}
+.desktop-nav a.active{color:var(--acc);border-left-color:var(--acc);background:rgba(245,158,11,.05)}
+.desktop-nav a .ico{width:20px;height:20px}.desktop-nav a .ico svg{width:100%;height:100%}
+.page{max-width:720px;padding:28px}.fab{bottom:36px;right:36px}}
 .desktop-nav{display:none}
 </style>
 </head>
 <body>
 
-<div class="install-banner" id="install-banner" onclick="installApp()">
-  Click to install Firefly Lite on your device
-</div>
+<div class="install-banner" id="install-banner" onclick="installApp()">点击安装到桌面，像 App 一样使用</div>
 
+<!-- Desktop Nav -->
 <nav class="desktop-nav">
-<div class="logo">&#128293; Firefly Lite</div>
-<a data-page="home" class="active"><span>&#128202;</span> Monthly</a>
-<a data-page="records"><span>&#128203;</span> Records</a>
-<a data-page="import"><span>&#128229;</span> Import</a>
-<a data-page="budget"><span>&#128176;</span> Budget</a>
-<a data-page="more"><span>&#9881;&#65039;</span> More</a>
+<div class="logo">
+<svg viewBox="0 0 512 512"><defs><linearGradient id="fl" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs><rect width="512" height="512" rx="112" fill="#1a1033"/><path d="M256 100C220 180 160 220 160 300C160 360 200 410 256 410C312 410 352 360 352 300C352 220 292 180 256 100Z" fill="url(#fl)"/><path d="M256 180C240 230 210 260 210 310C210 345 228 375 256 375C284 375 302 345 302 310C302 260 272 230 256 180Z" fill="#fbbf24" opacity=".7"/><path d="M256 250C248 275 235 290 235 315C235 332 244 345 256 345C268 345 277 332 277 315C277 290 264 275 256 250Z" fill="#fff" opacity=".5"/></svg>
+Firefly Lite
+</div>
+<a data-page="home" class="active"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>月度报表</a>
+<a data-page="records"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>交易记录</a>
+<a data-page="import"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>导入账单</a>
+<a data-page="budget"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>预算管理</a>
+<a data-page="more"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>更多设置</a>
 </nav>
 
+<!-- ═══ 月度报表 ═══ -->
 <div id="page-home" class="page active">
-<div class="page-title">Monthly Report <select class="month-sel" id="rpt-m" onchange="loadReport()"></select></div>
+<div class="page-title">月度报表 <select class="month-sel" id="rpt-m" onchange="loadReport()"></select></div>
 <div class="stat-row" id="stats"></div>
-<div class="chart-wrap"><h3>Category Expenses</h3><canvas id="pieC"></canvas></div>
-<div class="chart-wrap"><h3>Daily Trend</h3><canvas id="lineC"></canvas></div>
-<div class="sec-title">Top Expenses</div>
+<div class="chart-wrap"><h3>分类支出占比</h3><canvas id="pieC"></canvas></div>
+<div class="chart-wrap"><h3>每日收支趋势</h3><canvas id="lineC"></canvas></div>
+<div class="sec-title">支出排行</div>
 <div id="top-list"></div>
 </div>
 
+<!-- ═══ 交易记录 ═══ -->
 <div id="page-records" class="page">
-<div class="page-title">Records <select class="month-sel" id="rec-m" onchange="loadRecords()"></select></div>
-<div id="rec-filter" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
-  <select class="month-sel" id="rec-cat" onchange="loadRecords()" style="flex:1;min-width:100px">
-    <option value="">All Categories</option>
-  </select>
-  <select class="month-sel" id="rec-tag" onchange="loadRecords()" style="flex:1;min-width:100px">
-    <option value="">All Tags</option>
-  </select>
+<div class="page-title">交易记录 <select class="month-sel" id="rec-m" onchange="loadRecords()"></select></div>
+<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap">
+<select class="month-sel" id="rec-cat" onchange="loadRecords()" style="flex:1;min-width:100px"><option value="">全部分类</option></select>
+<select class="month-sel" id="rec-tag" onchange="loadRecords()" style="flex:1;min-width:100px"><option value="">全部标签</option></select>
 </div>
 <div id="rec-list"></div>
-<div id="rec-empty" class="empty" style="display:none"><div class="ico">&#128237;</div><p>No records</p></div>
+<div id="rec-empty" class="empty" style="display:none">
+<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+<p>暂无交易记录</p></div>
 </div>
 
+<!-- ═══ 导入 ═══ -->
 <div id="page-import" class="page">
-<div class="page-title">Import CSV</div>
+<div class="page-title">导入账单</div>
 <div class="upload-zone" id="drop-zone">
-<div class="ico">&#128196;</div>
-<p>Click to select CSV file</p>
-<p style="margin-top:6px;font-size:11px">Supports WeChat/Alipay/Bank export format</p>
-<input type="file" id="csv-file" accept=".csv" style="display:none">
+<svg class="uico" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+<p>点击选择文件</p>
+<p class="hint">支持 CSV / XLSX / XLS 格式（微信、支付宝、银行导出均可）</p>
+<input type="file" id="csv-file" accept=".csv,.xlsx,.xls" style="display:none">
 </div>
-<div id="upload-msg" style="display:none;margin-top:14px;padding:14px;background:var(--s);border-radius:var(--rad);border:1px solid var(--bd)"></div>
-<div class="sec-title" style="margin-top:24px">Sample Data</div>
-<button class="btn btn-block" onclick="loadSampleData()" style="margin-bottom:8px">Load Demo Transactions</button>
+<div id="upload-msg" style="display:none;margin-top:16px;padding:16px;background:var(--s);border-radius:var(--rad);border:1px solid var(--bd)"></div>
+<div class="sec-title">演示数据</div>
+<button class="btn btn-block" onclick="loadSampleData()">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v10M5 12l7 7 7-7"/></svg>
+加载 33 条示例交易</button>
 </div>
 
+<!-- ═══ 预算 ═══ -->
 <div id="page-budget" class="page">
-<div class="page-title">Budgets <select class="month-sel" id="bgt-m" onchange="loadBudgets()"></select></div>
-<button class="btn btn-p btn-block" onclick="showModal('m-bgt')" style="margin-bottom:16px">+ Set Budget</button>
+<div class="page-title">预算管理 <select class="month-sel" id="bgt-m" onchange="loadBudgets()"></select></div>
+<button class="btn btn-p btn-block" onclick="showModal('m-bgt')" style="margin-bottom:18px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+设置预算</button>
 <div id="bgt-list"></div>
-<div id="bgt-empty" class="empty" style="display:none"><div class="ico">&#128176;</div><p>No budgets set</p></div>
+<div id="bgt-empty" class="empty" style="display:none">
+<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+<p>还没有设置预算<br><span style="font-size:12px;color:var(--t3)">点击上方按钮添加</span></p></div>
 </div>
 
+<!-- ═══ 更多 ═══ -->
 <div id="page-more" class="page">
-<div class="page-title">More</div>
-<div class="sec-title">Auto-Categorization Rules</div>
-<button class="btn btn-block" onclick="showModal('m-rule')" style="margin-bottom:12px">+ Add Rule</button>
+<div class="page-title">更多设置</div>
+<div class="sec-title">自动分类规则</div>
+<button class="btn btn-block" onclick="showModal('m-rule')" style="margin-bottom:12px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+添加规则</button>
 <div id="rule-list"></div>
-<div class="sec-title" style="margin-top:24px">Tags</div>
+<div class="sec-title" style="margin-top:28px">标签云</div>
 <div class="tags-wrap" id="tags-cloud"></div>
 <div id="tag-records" style="display:none"><div class="sec-title" id="tag-title"></div><div id="tag-list"></div></div>
-<div class="sec-title" style="margin-top:24px">Data</div>
-<button class="btn btn-block" onclick="exportCSV()" style="margin-bottom:8px">Export CSV</button>
-<button class="btn btn-block btn-d" onclick="clearAllData()" style="margin-top:8px">Clear All Data</button>
-<div class="sec-title" style="margin-top:24px">About</div>
-<p style="font-size:12px;color:var(--t2)">Firefly Lite v2.0 - Personal Finance Tracker<br>All data stored locally on your device.<br>No server required.</p>
+<div class="sec-title" style="margin-top:28px">数据管理</div>
+<button class="btn btn-block" onclick="exportCSV()" style="margin-bottom:10px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+导出 CSV</button>
+<button class="btn btn-block btn-d" onclick="clearAllData()" style="margin-top:6px">清除所有数据</button>
+<div class="sec-title" style="margin-top:28px">关于</div>
+<div style="background:var(--s);border:1px solid var(--bd);border-radius:var(--rad);padding:20px;text-align:center">
+<svg width="52" height="52" viewBox="0 0 512 512"><defs><linearGradient id="fl2" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs><rect width="512" height="512" rx="112" fill="#1a1033"/><path d="M256 100C220 180 160 220 160 300C160 360 200 410 256 410C312 410 352 360 352 300C352 220 292 180 256 100Z" fill="url(#fl2)"/><path d="M256 180C240 230 210 260 210 310C210 345 228 375 256 375C284 375 302 345 302 310C302 260 272 230 256 180Z" fill="#fbbf24" opacity=".7"/><path d="M256 250C248 275 235 290 235 315C235 332 244 345 256 345C268 345 277 332 277 315C277 290 264 275 256 250Z" fill="#fff" opacity=".5"/></svg>
+<p style="font-size:16px;font-weight:800;margin-top:12px">Firefly Lite <span style="color:var(--t2);font-weight:400;font-size:13px">v2.0</span></p>
+<p style="font-size:12px;color:var(--t3);margin-top:6px;line-height:1.6">个人财务管理助手<br>所有数据仅存储在本地设备</p>
+</div>
 </div>
 
-<button class="fab" onclick="showModal('m-tx')">+</button>
+<!-- FAB -->
+<button class="fab" onclick="showModal('m-tx')">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
 
+<!-- Tab Bar -->
 <nav class="tab-bar">
-<a data-page="home" class="active"><span class="ico">&#128202;</span>Report</a>
-<a data-page="records"><span class="ico">&#128203;</span>Records</a>
-<a data-page="import"><span class="ico">&#128229;</span>Import</a>
-<a data-page="budget"><span class="ico">&#128176;</span>Budget</a>
-<a data-page="more"><span class="ico">&#9881;&#65039;</span>More</a>
+<a data-page="home" class="active"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>报表</a>
+<a data-page="records"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>记录</a>
+<a data-page="import"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>导入</a>
+<a data-page="budget"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>预算</a>
+<a data-page="more"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>更多</a>
 </nav>
 
-<!-- Modals -->
+<!-- ═══ Modals ═══ -->
 <div class="modal-overlay" id="m-tx"><div class="modal-box">
-<h2>Add Transaction <span class="modal-close" onclick="closeModal('m-tx')">&times;</span></h2>
-<div class="fg"><label>Date</label><input type="date" id="tx-date"></div>
-<div class="fg"><label>Amount (negative=expense, positive=income)</label><input type="number" id="tx-amt" step="0.01" inputmode="decimal" placeholder="-50.00"></div>
-<div class="fg"><label>Payee</label><input id="tx-payee" placeholder="Restaurant name"></div>
-<div class="fg"><label>Description</label><input id="tx-desc" placeholder="Lunch"></div>
-<div class="fg"><label>Category</label><input id="tx-cat" placeholder="Leave empty for auto-match"></div>
-<div class="fg"><label>Tags (comma separated)</label><input id="tx-tags" placeholder="work,commute"></div>
-<button class="btn btn-p btn-block" onclick="submitTx()">Save</button>
+<h2>记一笔 <span class="modal-close" onclick="closeModal('m-tx')">&times;</span></h2>
+<div class="fg"><label>日期</label><input type="date" id="tx-date"></div>
+<div class="fg"><label>金额（负数=支出，正数=收入）</label><input type="number" id="tx-amt" step="0.01" inputmode="decimal" placeholder="-50.00"></div>
+<div class="fg"><label>商家 / 对方</label><input id="tx-payee" placeholder="美团外卖、公司..."></div>
+<div class="fg"><label>备注</label><input id="tx-desc" placeholder="午餐、工资..."></div>
+<div class="fg"><label>分类（留空自动匹配）</label><input id="tx-cat" placeholder="餐饮、交通..."></div>
+<div class="fg"><label>标签（逗号分隔）</label><input id="tx-tags" placeholder="工作餐、通勤..."></div>
+<button class="btn btn-p btn-block" onclick="submitTx()">保存</button>
 </div></div>
 
 <div class="modal-overlay" id="m-bgt"><div class="modal-box">
-<h2>Set Budget <span class="modal-close" onclick="closeModal('m-bgt')">&times;</span></h2>
-<div class="fg"><label>Category</label><input id="bgt-cat" placeholder="Food"></div>
-<div class="fg"><label>Monthly Limit</label><input type="number" id="bgt-lim" step="1" inputmode="numeric" placeholder="2000"></div>
-<button class="btn btn-p btn-block" onclick="submitBgt()">Save</button>
+<h2>设置预算 <span class="modal-close" onclick="closeModal('m-bgt')">&times;</span></h2>
+<div class="fg"><label>分类名称</label><input id="bgt-cat" placeholder="餐饮、交通..."></div>
+<div class="fg"><label>每月预算上限</label><input type="number" id="bgt-lim" step="1" inputmode="numeric" placeholder="2000"></div>
+<button class="btn btn-p btn-block" onclick="submitBgt()">保存</button>
 </div></div>
 
 <div class="modal-overlay" id="m-rule"><div class="modal-box">
-<h2>Add Rule <span class="modal-close" onclick="closeModal('m-rule')">&times;</span></h2>
-<div class="fg"><label>Keyword</label><input id="rule-kw" placeholder="Starbucks"></div>
-<div class="fg"><label>Category</label><input id="rule-cat" placeholder="Food"></div>
-<div class="fg"><label>Tag</label><input id="rule-tag" placeholder="coffee"></div>
-<div class="fg"><label>Priority (1-10)</label><input type="number" id="rule-pri" value="5" min="1" max="10"></div>
-<button class="btn btn-p btn-block" onclick="submitRule()">Save</button>
+<h2>添加自动分类规则 <span class="modal-close" onclick="closeModal('m-rule')">&times;</span></h2>
+<div class="fg"><label>匹配关键词</label><input id="rule-kw" placeholder="星巴克、美团..."></div>
+<div class="fg"><label>自动归入分类</label><input id="rule-cat" placeholder="餐饮"></div>
+<div class="fg"><label>自动添加标签</label><input id="rule-tag" placeholder="摸鱼"></div>
+<div class="fg"><label>优先级（1-10）</label><input type="number" id="rule-pri" value="5" min="1" max="10"></div>
+<button class="btn btn-p btn-block" onclick="submitRule()">保存</button>
 </div></div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ════════════════════════════════════════════
-// IndexedDB Database Layer
-// ════════════════════════════════════════════
-const DB_NAME = 'FireflyLiteDB';
-const DB_VERSION = 1;
-let db = null;
+// ══════════════════════════════════════════
+// IndexedDB
+// ══════════════════════════════════════════
+const DB='FireflyLiteDB',DV=1;let db=null;
+function openDB(){return new Promise((ok,no)=>{const r=indexedDB.open(DB,DV);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('transactions')){const s=d.createObjectStore('transactions',{keyPath:'id',autoIncrement:true});s.createIndex('date','date')}if(!d.objectStoreNames.contains('rules'))d.createObjectStore('rules',{keyPath:'id',autoIncrement:true});if(!d.objectStoreNames.contains('budgets')){const s=d.createObjectStore('budgets',{keyPath:'id',autoIncrement:true});s.createIndex('category','category',{unique:true})}};r.onsuccess=e=>{db=e.target.result;ok(db)};r.onerror=e=>no(e.target.error)})}
+function dbAdd(s,d){return new Promise((ok,no)=>{const t=db.transaction(s,'readwrite'),r=t.objectStore(s).add(d);r.onsuccess=()=>ok(r.result);r.onerror=e=>no(e.target.error)})}
+function dbPut(s,d){return new Promise((ok,no)=>{const t=db.transaction(s,'readwrite'),r=t.objectStore(s).put(d);r.onsuccess=()=>ok(r.result);r.onerror=e=>no(e.target.error)})}
+function dbDel(s,id){return new Promise((ok)=>{const t=db.transaction(s,'readwrite'),r=t.objectStore(s).delete(id);r.onsuccess=()=>ok()})}
+function dbAll(s){return new Promise((ok,no)=>{const t=db.transaction(s,'readonly'),r=t.objectStore(s).getAll();r.onsuccess=()=>ok(r.result);r.onerror=e=>no(e.target.error)})}
+function dbClear(s){return new Promise((ok)=>{const t=db.transaction(s,'readwrite'),r=t.objectStore(s).clear();r.onsuccess=()=>ok()})}
 
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      const d = e.target.result;
-      if (!d.objectStoreNames.contains('transactions')) {
-        const ts = d.createObjectStore('transactions', { keyPath: 'id', autoIncrement: true });
-        ts.createIndex('date', 'date', { unique: false });
-        ts.createIndex('category', 'category', { unique: false });
-        ts.createIndex('tags', 'tags', { unique: false });
-      }
-      if (!d.objectStoreNames.contains('rules')) {
-        d.createObjectStore('rules', { keyPath: 'id', autoIncrement: true });
-      }
-      if (!d.objectStoreNames.contains('budgets')) {
-        const bs = d.createObjectStore('budgets', { keyPath: 'id', autoIncrement: true });
-        bs.createIndex('category', 'category', { unique: true });
-      }
-    };
-    req.onsuccess = e => { db = e.target.result; resolve(db); };
-    req.onerror = e => reject(e.target.error);
-  });
-}
-
-function dbAdd(store, data) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
-    const req = tx.objectStore(store).add(data);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = e => reject(e.target.error);
-  });
-}
-
-function dbPut(store, data) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
-    const req = tx.objectStore(store).put(data);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = e => reject(e.target.error);
-  });
-}
-
-function dbDelete(store, id) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
-    const req = tx.objectStore(store).delete(id);
-    req.onsuccess = () => resolve();
-    req.onerror = e => reject(e.target.error);
-  });
-}
-
-function dbGetAll(store) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readonly');
-    const req = tx.objectStore(store).getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = e => reject(e.target.error);
-  });
-}
-
-function dbClear(store) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(store, 'readwrite');
-    const req = tx.objectStore(store).clear();
-    req.onsuccess = () => resolve();
-    req.onerror = e => reject(e.target.error);
-  });
-}
-
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
 // Helpers
-// ════════════════════════════════════════════
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
-const fmt = n => new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
-let charts = {};
-let curMonth = '';
+// ══════════════════════════════════════════
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+const fmt=n=>new Intl.NumberFormat('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+let charts={},curMonth='';
+const COLORS=['#ef4444','#f59e0b','#10b981','#6366f1','#a855f7','#ec4899','#14b8a6','#f97316','#8b5cf6','#84cc16','#06b6d4','#e11d48'];
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function showModal(id){$('#'+id).classList.add('show')}
+function closeModal(id){$('#'+id).classList.remove('show')}
+function destroy(k){if(charts[k]){charts[k].destroy();charts[k]=null}}
 
-function toast(m) {
-  const t = $('#toast'); t.textContent = m; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
-}
-function showModal(id) { $('#'+id).classList.add('show'); }
-function closeModal(id) { $('#'+id).classList.remove('show'); }
-function destroy(k) { if(charts[k]){charts[k].destroy();charts[k]=null;} }
-
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
 // Auto-categorization
-// ════════════════════════════════════════════
-const DEFAULT_RULES = [
-  {keyword:'地铁',target_category:'交通',target_tag:'通勤',priority:10},
-  {keyword:'滴滴',target_category:'交通',target_tag:'通勤',priority:10},
-  {keyword:'打车',target_category:'交通',target_tag:'通勤',priority:9},
-  {keyword:'加油',target_category:'交通',target_tag:'通勤',priority:9},
-  {keyword:'外卖',target_category:'餐饮',target_tag:'工作餐',priority:10},
-  {keyword:'美团',target_category:'餐饮',target_tag:'工作餐',priority:8},
-  {keyword:'星巴克',target_category:'餐饮',target_tag:'摸鱼',priority:8},
-  {keyword:'瑞幸',target_category:'餐饮',target_tag:'摸鱼',priority:8},
-  {keyword:'咖啡',target_category:'餐饮',target_tag:'摸鱼',priority:7},
-  {keyword:'盒马',target_category:'餐饮',target_tag:'买菜',priority:8},
-  {keyword:'叮咚买菜',target_category:'餐饮',target_tag:'买菜',priority:9},
-  {keyword:'工资',target_category:'工资',target_tag:'固定收入',priority:10},
-  {keyword:'房租',target_category:'住房',target_tag:'固定支出',priority:10},
-  {keyword:'京东',target_category:'购物',target_tag:'日用',priority:5},
-  {keyword:'淘宝',target_category:'购物',target_tag:'购物',priority:5},
-  {keyword:'Apple',target_category:'数码',target_tag:'订阅',priority:7},
-  {keyword:'网易云',target_category:'娱乐',target_tag:'订阅',priority:8},
-  {keyword:'得到',target_category:'学习',target_tag:'订阅',priority:8},
-  {keyword:'海底捞',target_category:'餐饮',target_tag:'社交',priority:8},
-  {keyword:'健身',target_category:'健身',target_tag:'健康',priority:8},
-  {keyword:'电影',target_category:'娱乐',target_tag:'周末',priority:8},
-  {keyword:'红包',target_category:'礼金',target_tag:'礼金',priority:7},
-];
+// ══════════════════════════════════════════
+const RULES=[
+{keyword:'地铁',target_category:'交通',target_tag:'通勤',priority:10},{keyword:'滴滴',target_category:'交通',target_tag:'通勤',priority:10},
+{keyword:'打车',target_category:'交通',target_tag:'通勤',priority:9},{keyword:'加油',target_category:'交通',target_tag:'通勤',priority:9},
+{keyword:'外卖',target_category:'餐饮',target_tag:'工作餐',priority:10},{keyword:'美团',target_category:'餐饮',target_tag:'工作餐',priority:8},
+{keyword:'星巴克',target_category:'餐饮',target_tag:'摸鱼',priority:8},{keyword:'瑞幸',target_category:'餐饮',target_tag:'摸鱼',priority:8},
+{keyword:'咖啡',target_category:'餐饮',target_tag:'摸鱼',priority:7},{keyword:'盒马',target_category:'餐饮',target_tag:'买菜',priority:8},
+{keyword:'叮咚买菜',target_category:'餐饮',target_tag:'买菜',priority:9},{keyword:'工资',target_category:'工资',target_tag:'固定收入',priority:10},
+{keyword:'房租',target_category:'住房',target_tag:'固定支出',priority:10},{keyword:'京东',target_category:'购物',target_tag:'日用',priority:5},
+{keyword:'淘宝',target_category:'购物',target_tag:'购物',priority:5},{keyword:'Apple',target_category:'数码',target_tag:'订阅',priority:7},
+{keyword:'网易云',target_category:'娱乐',target_tag:'订阅',priority:8},{keyword:'得到',target_category:'学习',target_tag:'订阅',priority:8},
+{keyword:'海底捞',target_category:'餐饮',target_tag:'社交',priority:8},{keyword:'健身',target_category:'健身',target_tag:'健康',priority:8},
+{keyword:'电影',target_category:'娱乐',target_tag:'周末',priority:8},{keyword:'红包',target_category:'礼金',target_tag:'礼金',priority:7}];
+async function initRules(){const e=await dbAll('rules');if(!e.length)for(const r of RULES)await dbAdd('rules',r)}
+async function applyRules(payee,desc,cc,ct){
+const rules=await dbAll('rules');rules.sort((a,b)=>(b.priority||0)-(a.priority||0));
+const t=`${payee} ${desc}`;let cat=(cc&&cc!=='未分类')?cc:'';
+let tags=new Set(ct?ct.split(',').map(x=>x.trim()).filter(Boolean):[]);
+for(const r of rules)if(r.keyword&&t.includes(r.keyword)){if(!cat&&r.target_category)cat=r.target_category;if(r.target_tag)tags.add(r.target_tag)}
+return{category:cat||'未分类',tags:[...tags].join(',')}}
 
-async function initDefaultRules() {
-  const existing = await dbGetAll('rules');
-  if (existing.length === 0) {
-    for (const r of DEFAULT_RULES) {
-      await dbAdd('rules', r);
-    }
-  }
-}
-
-async function applyRules(payee, desc, curCat, curTags) {
-  const rules = await dbGetAll('rules');
-  rules.sort((a, b) => (b.priority || 0) - (a.priority || 0));
-  const text = `${payee} ${desc}`;
-  let cat = (curCat && curCat !== '未分类') ? curCat : '';
-  let tags = new Set(curTags ? curTags.split(',').map(t => t.trim()).filter(Boolean) : []);
-  for (const r of rules) {
-    if (r.keyword && text.includes(r.keyword)) {
-      if (!cat && r.target_category) cat = r.target_category;
-      if (r.target_tag) tags.add(r.target_tag);
-    }
-  }
-  return { category: cat || '未分类', tags: [...tags].join(',') };
-}
-
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
 // Navigation
-// ════════════════════════════════════════════
-function goPage(page) {
-  $$('.tab-bar a,.desktop-nav a').forEach(a => a.classList.toggle('active', a.dataset.page === page));
-  $$('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
-  const fn = { home: loadReport, records: loadRecords, budget: loadBudgets, more: loadMore }[page];
-  if (fn) fn();
-}
-$$('.tab-bar a,.desktop-nav a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); goPage(a.dataset.page); }));
+// ══════════════════════════════════════════
+function goPage(p){$$('.tab-bar a,.desktop-nav a').forEach(a=>a.classList.toggle('active',a.dataset.page===p));
+$$('.page').forEach(el=>el.classList.toggle('active',el.id==='page-'+p));
+({home:loadReport,records:loadRecords,budget:loadBudgets,more:loadMore})[p]?.()}
+$$('.tab-bar a,.desktop-nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();goPage(a.dataset.page)}));
 
-// ════════════════════════════════════════════
-// Month selector
-// ════════════════════════════════════════════
-async function loadMonths() {
-  const txns = await dbGetAll('transactions');
-  const months = [...new Set(txns.map(t => t.date.slice(0, 7)))].sort().reverse();
-  const def = months.length ? months[0] : new Date().toISOString().slice(0, 7);
-  ['rpt-m', 'rec-m', 'bgt-m'].forEach(id => {
-    const s = $('#' + id);
-    if (!s) return;
-    s.innerHTML = months.length ? months.map(v => `<option value="${v}">${v}</option>`).join('') : `<option>${def}</option>`;
-  });
-  if (months.length && !curMonth) curMonth = months[0];
-}
+// ══════════════════════════════════════════
+// Months
+// ══════════════════════════════════════════
+async function loadMonths(){const txns=await dbAll('transactions');
+const ms=[...new Set(txns.map(t=>t.date.slice(0,7)))].sort().reverse();
+const def=ms[0]||new Date().toISOString().slice(0,7);
+['rpt-m','rec-m','bgt-m'].forEach(id=>{const s=$('#'+id);if(!s)return;
+s.innerHTML=ms.length?ms.map(v=>`<option value="${v}">${v}</option>`).join(''):`<option>${def}</option>`});
+if(ms.length&&!curMonth)curMonth=ms[0]}
 
-// ════════════════════════════════════════════
-// Monthly Report
-// ════════════════════════════════════════════
-async function loadReport() {
-  await loadMonths();
-  const m = $('#rpt-m').value || curMonth || new Date().toISOString().slice(0, 7);
-  const txns = (await dbGetAll('transactions')).filter(t => t.date.startsWith(m));
+// ══════════════════════════════════════════
+// Report
+// ══════════════════════════════════════════
+async function loadReport(){
+await loadMonths();const m=$('#rpt-m').value||curMonth||new Date().toISOString().slice(0,7);
+const txns=(await dbAll('transactions')).filter(t=>t.date.startsWith(m));
+let ti=0,te=0;const cm={},dm={};
+for(const t of txns){if(t.amount>0)ti+=t.amount;else te+=Math.abs(t.amount);
+if(t.amount<0)cm[t.category]=(cm[t.category]||0)+Math.abs(t.amount);
+if(!dm[t.date])dm[t.date]={date:t.date,e:0,i:0};
+if(t.amount<0)dm[t.date].e+=Math.abs(t.amount);else dm[t.date].i+=t.amount}
+$('#stats').innerHTML=`
+<div class="stat-card si"><div class="lb">总收入</div><div class="vl g">+${fmt(ti)}</div></div>
+<div class="stat-card se"><div class="lb">总支出</div><div class="vl r">-${fmt(te)}</div></div>
+<div class="stat-card sn full"><div class="lb">本月结余</div><div class="vl acc">${ti-te>=0?'+':''}${fmt(ti-te)}</div></div>`;
+const bc=Object.entries(cm).map(([c,t])=>({c,t})).sort((a,b)=>b.t-a.t);
+destroy('pie');if(bc.length)charts.pie=new Chart($('#pieC'),{type:'doughnut',
+data:{labels:bc.map(x=>x.c),datasets:[{data:bc.map(x=>x.t),backgroundColor:COLORS,borderWidth:0,spacing:3}]},
+options:{responsive:true,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:'#7b7f96',font:{size:11,weight:'500'},padding:14,usePointStyle:true,pointStyleWidth:8}}}}});
+const dl=Object.values(dm).sort((a,b)=>a.date.localeCompare(b.date));
+destroy('line');if(dl.length)charts.line=new Chart($('#lineC'),{type:'line',
+data:{labels:dl.map(x=>x.date.slice(8)+'日'),datasets:[
+{label:'支出',data:dl.map(x=>x.e),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.06)',fill:true,tension:.4,borderWidth:2,pointRadius:0,pointHoverRadius:4},
+{label:'收入',data:dl.map(x=>x.i),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.06)',fill:true,tension:.4,borderWidth:2,pointRadius:0,pointHoverRadius:4}]},
+options:{responsive:true,interaction:{intersect:false,mode:'index'},
+scales:{x:{ticks:{color:'#454865',font:{size:10}},grid:{display:false}},
+y:{ticks:{color:'#454865',font:{size:10}},grid:{color:'rgba(255,255,255,.03)'}}},
+plugins:{legend:{labels:{color:'#7b7f96',font:{size:11},usePointStyle:true,pointStyleWidth:8}}}}});
+const top=txns.filter(t=>t.amount<0).sort((a,b)=>a.amount-b.amount).slice(0,5);
+$('#top-list').innerHTML=top.length?top.map(t=>`<div class="list-item">
+<div class="left"><div class="payee">${t.payee||t.description||'-'}</div>
+<div class="meta"><span class="badge badge-c">${t.category}</span>${t.date}</div></div>
+<div class="amt r">${fmt(t.amount)}</div></div>`).join(''):'<div class="empty"><p>本月暂无支出</p></div>'}
 
-  let totalIncome = 0, totalExpense = 0;
-  const catMap = {}, dailyMap = {};
-
-  for (const t of txns) {
-    const amt = t.amount;
-    if (amt > 0) totalIncome += amt;
-    else totalExpense += Math.abs(amt);
-
-    if (amt < 0) {
-      catMap[t.category] = (catMap[t.category] || 0) + Math.abs(amt);
-    }
-
-    if (!dailyMap[t.date]) dailyMap[t.date] = { date: t.date, expense: 0, income: 0 };
-    if (amt < 0) dailyMap[t.date].expense += Math.abs(amt);
-    else dailyMap[t.date].income += amt;
-  }
-
-  const net = totalIncome - totalExpense;
-  $('#stats').innerHTML = `
-    <div class="stat-card"><div class="lb">Income</div><div class="vl g">+${fmt(totalIncome)}</div></div>
-    <div class="stat-card"><div class="lb">Expense</div><div class="vl r">-${fmt(totalExpense)}</div></div>
-    <div class="stat-card full"><div class="lb">Net</div><div class="vl acc">${net >= 0 ? '+' : ''}${fmt(net)}</div></div>`;
-
-  // Pie chart
-  const byCategory = Object.entries(catMap).map(([category, total]) => ({ category, total })).sort((a, b) => b.total - a.total);
-  destroy('pie');
-  if (byCategory.length) {
-    charts.pie = new Chart($('#pieC'), {
-      type: 'doughnut',
-      data: {
-        labels: byCategory.map(c => c.category),
-        datasets: [{
-          data: byCategory.map(c => c.total),
-          backgroundColor: ['#ef4444','#f59e0b','#22c55e','#3b82f6','#a855f7','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16']
-        }]
-      },
-      options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#8b8fa8', font: { size: 11 }, padding: 10 } } } }
-    });
-  }
-
-  // Line chart
-  const daily = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
-  destroy('line');
-  if (daily.length) {
-    charts.line = new Chart($('#lineC'), {
-      type: 'line',
-      data: {
-        labels: daily.map(x => x.date.slice(8)),
-        datasets: [
-          { label: 'Expense', data: daily.map(x => x.expense), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.1)', fill: true, tension: .3 },
-          { label: 'Income', data: daily.map(x => x.income), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.1)', fill: true, tension: .3 }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: { ticks: { color: '#8b8fa8', font: { size: 10 } }, grid: { display: false } },
-          y: { ticks: { color: '#8b8fa8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.05)' } }
-        },
-        plugins: { legend: { labels: { color: '#8b8fa8', font: { size: 11 } } } }
-      }
-    });
-  }
-
-  // Top expenses
-  const top10 = txns.filter(t => t.amount < 0).sort((a, b) => a.amount - b.amount).slice(0, 5);
-  $('#top-list').innerHTML = top10.length ? top10.map(t => `<div class="list-item">
-    <div class="left"><div class="payee">${t.payee || t.description || '-'}</div>
-    <div class="meta"><span class="badge badge-c">${t.category}</span>${t.date}</div></div>
-    <div class="amt r">${fmt(t.amount)}</div></div>`).join('') : '<div class="empty"><p>No expenses this month</p></div>';
-}
-
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
 // Records
-// ════════════════════════════════════════════
-async function loadRecords() {
-  await loadMonths();
-  const m = $('#rec-m').value || curMonth || new Date().toISOString().slice(0, 7);
-  const catFilter = $('#rec-cat').value;
-  const tagFilter = $('#rec-tag').value;
+// ══════════════════════════════════════════
+async function loadRecords(){
+await loadMonths();const m=$('#rec-m').value||curMonth||new Date().toISOString().slice(0,7);
+const cf=$('#rec-cat').value,tf=$('#rec-tag').value;
+let txns=(await dbAll('transactions')).filter(t=>t.date.startsWith(m));
+if(cf)txns=txns.filter(t=>t.category===cf);if(tf)txns=txns.filter(t=>t.tags?.includes(tf));
+txns.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+const all=await dbAll('transactions');
+const cats=[...new Set(all.map(t=>t.category))].sort();
+const aTags=[...new Set(all.flatMap(t=>t.tags?t.tags.split(',').map(s=>s.trim()).filter(Boolean):[]))].sort();
+$('#rec-cat').innerHTML='<option value="">全部分类</option>'+cats.map(c=>`<option value="${c}" ${c===cf?'selected':''}>${c}</option>`).join('');
+$('#rec-tag').innerHTML='<option value="">全部标签</option>'+aTags.map(t=>`<option value="${t}" ${t===tf?'selected':''}>${t}</option>`).join('');
+$('#rec-empty').style.display=txns.length?'none':'block';
+$('#rec-list').innerHTML=txns.map(t=>`<div class="list-item">
+<div class="left"><div class="payee">${t.payee||'-'}</div>
+<div class="meta"><span class="badge badge-c">${t.category}</span>${t.description||''} ${t.date}
+${t.tags?t.tags.split(',').map(x=>`<span class="badge badge-t">${x.trim()}</span>`).join(''):''}
+</div></div><div style="display:flex;align-items:center;gap:4px">
+<div class="amt ${t.amount<0?'r':'g'}">${t.amount<0?'':'+ '}${fmt(t.amount)}</div>
+<span class="del-btn" onclick="delTx(${t.id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+</div></div>`).join('')}
+async function delTx(id){if(!confirm('确定删除这笔交易？'))return;await dbDel('transactions',id);toast('已删除');loadRecords()}
 
-  let txns = (await dbGetAll('transactions')).filter(t => t.date.startsWith(m));
-  if (catFilter) txns = txns.filter(t => t.category === catFilter);
-  if (tagFilter) txns = txns.filter(t => t.tags && t.tags.includes(tagFilter));
-  txns.sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+// ══════════════════════════════════════════
+// File Import (CSV + XLSX)
+// ══════════════════════════════════════════
+$('#drop-zone').addEventListener('click',()=>$('#csv-file').click());
+$('#csv-file').addEventListener('change',e=>{if(e.target.files[0])doUpload(e.target.files[0])});
+$('#drop-zone').addEventListener('dragover',e=>{e.preventDefault();e.currentTarget.classList.add('dragover')});
+$('#drop-zone').addEventListener('dragleave',e=>e.currentTarget.classList.remove('dragover'));
+$('#drop-zone').addEventListener('drop',e=>{e.preventDefault();e.currentTarget.classList.remove('dragover');if(e.dataTransfer.files[0])doUpload(e.dataTransfer.files[0])});
 
-  // Populate filter dropdowns
-  const allTxns = await dbGetAll('transactions');
-  const cats = [...new Set(allTxns.map(t => t.category))].sort();
-  const allTags = [...new Set(allTxns.flatMap(t => t.tags ? t.tags.split(',').map(s=>s.trim()).filter(Boolean) : []))].sort();
-  const curCat = $('#rec-cat').value;
-  const curTag = $('#rec-tag').value;
-  $('#rec-cat').innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${c}" ${c===curCat?'selected':''}>${c}</option>`).join('');
-  $('#rec-tag').innerHTML = '<option value="">All Tags</option>' + allTags.map(t => `<option value="${t}" ${t===curTag?'selected':''}>${t}</option>`).join('');
-
-  $('#rec-empty').style.display = txns.length ? 'none' : 'block';
-  $('#rec-list').innerHTML = txns.map(t => `<div class="list-item">
-    <div class="left"><div class="payee">${t.payee || '-'}</div>
-    <div class="meta"><span class="badge badge-c">${t.category}</span>${t.description || ''} ${t.date}
-    ${t.tags ? t.tags.split(',').map(tg=>`<span class="badge badge-t">${tg.trim()}</span>`).join('') : ''}</div></div>
-    <div style="display:flex;align-items:center;gap:6px">
-    <div class="amt ${t.amount < 0 ? 'r' : 'g'}">${t.amount < 0 ? '' : '+ '}${fmt(t.amount)}</div>
-    <span class="del-btn" onclick="delTx(${t.id})">&#10005;</span></div></div>`).join('');
-}
-
-async function delTx(id) {
-  if (!confirm('Delete this transaction?')) return;
-  await dbDelete('transactions', id);
-  toast('Deleted');
-  loadRecords();
-}
-
-// ════════════════════════════════════════════
-// CSV Import (client-side parsing)
-// ════════════════════════════════════════════
-$('#drop-zone').addEventListener('click', () => $('#csv-file').click());
-$('#csv-file').addEventListener('change', e => { if (e.target.files[0]) doUpload(e.target.files[0]); });
-$('#drop-zone').addEventListener('dragover', e => { e.preventDefault(); e.currentTarget.classList.add('dragover'); });
-$('#drop-zone').addEventListener('dragleave', e => { e.currentTarget.classList.remove('dragover'); });
-$('#drop-zone').addEventListener('drop', e => {
-  e.preventDefault(); e.currentTarget.classList.remove('dragover');
-  if (e.dataTransfer.files[0]) doUpload(e.dataTransfer.files[0]);
-});
-
-async function doUpload(file) {
-  const text = await file.text();
-  // Handle BOM
-  const content = text.replace(/^\uFEFF/, '');
-  const lines = content.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) { toast('Empty CSV'); return; }
-
-  // Parse header and map columns
-  const header = parseCSVLine(lines[0]);
-  const fmap = {};
-  header.forEach((fn, i) => {
-    const fl = fn.trim().toLowerCase();
-    if (['日期','date','交易日期','时间'].includes(fl)) fmap.date = i;
-    else if (['金额','amount','交易金额','金额(元)'].includes(fl)) fmap.amount = i;
-    else if (['收款方/付款方','payee','交易对方','对方','商户','对方户名'].includes(fl)) fmap.payee = i;
-    else if (['分类','category'].includes(fl)) fmap.category = i;
-    else if (['描述','description','备注','摘要','商品说明','交易说明'].includes(fl)) fmap.description = i;
-    else if (['标签','tags','tag'].includes(fl)) fmap.tags = i;
-    // Additional WeChat/Alipay formats
-    else if (fl.includes('收/支') || fl === '收/付款方式') fmap.type_hint = i;
-    else if (fl.includes('金额') && fmap.amount === undefined) fmap.amount = i;
-    else if (fl.includes('对方') && fmap.payee === undefined) fmap.payee = i;
-  });
-
-  let imported = 0, skipped = 0;
-  for (let i = 1; i < lines.length; i++) {
-    try {
-      const cols = parseCSVLine(lines[i]);
-      let d = fmap.date !== undefined ? cols[fmap.date]?.trim() : '';
-      let a = fmap.amount !== undefined ? cols[fmap.amount]?.trim().replace(/[¥￥,]/g, '') : '';
-      if (!d || !a || isNaN(parseFloat(a))) { skipped++; continue; }
-
-      // Normalize date
-      d = d.replace(/\//g, '-').slice(0, 10);
-      if (!/^\d{4}-\d{2}-\d{2}/.test(d)) { skipped++; continue; }
-      d = d.slice(0, 10);
-
-      let amt = parseFloat(a);
-      const payee = fmap.payee !== undefined ? (cols[fmap.payee]?.trim() || '') : '';
-      let cat = fmap.category !== undefined ? (cols[fmap.category]?.trim() || '') : '';
-      const desc = fmap.description !== undefined ? (cols[fmap.description]?.trim() || '') : '';
-      const tags = fmap.tags !== undefined ? (cols[fmap.tags]?.trim() || '') : '';
-
-      const { category, tags: autoTags } = await applyRules(payee, desc, cat, tags);
-      const tp = amt > 0 ? 'income' : 'expense';
-
-      await dbAdd('transactions', {
-        date: d, amount: amt, payee, category, description: desc,
-        tags: autoTags || tags, type: tp,
-        created_at: new Date().toISOString()
-      });
-      imported++;
-    } catch (e) { skipped++; }
+async function doUpload(file){
+const ext=file.name.split('.').pop().toLowerCase();
+let rows=[];
+if(ext==='csv'){
+  const text=(await file.text()).replace(/^\uFEFF/,'');
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2){toast('文件为空');return}
+  const header=parseCSVLine(lines[0]);
+  for(let i=1;i<lines.length;i++){
+    const cols=parseCSVLine(lines[i]);
+    const obj={};header.forEach((h,j)=>obj[h.trim()]=cols[j]||'');
+    rows.push(obj);
   }
+  rows._header=header;
+}else if(ext==='xlsx'||ext==='xls'){
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array',cellDates:true});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+    if(!rows.length){toast('表格为空');return}
+    rows._header=Object.keys(rows[0]);
+  }catch(e){toast('文件解析失败: '+e.message);return}
+}else{toast('不支持的文件格式');return}
 
-  const el = $('#upload-msg');
-  el.style.display = 'block';
-  el.innerHTML = `<p style="font-weight:600">Import Complete</p>
-    <p style="margin-top:4px">Imported <strong style="color:var(--g)">${imported}</strong> transactions${skipped ? `, skipped ${skipped}` : ''}</p>`;
-  toast(`Imported ${imported}`);
-  loadMonths();
-}
+const header=rows._header||Object.keys(rows[0]||{});
+const fmap={};
+header.forEach(fn=>{const fl=fn.trim().toLowerCase();
+if(['日期','date','交易日期','时间','交易时间'].includes(fl))fmap.date=fn;
+else if(['金额','amount','交易金额','金额(元)','金额（元）'].includes(fl))fmap.amount=fn;
+else if(['收款方/付款方','payee','交易对方','对方','商户','对方户名','交易方'].includes(fl))fmap.payee=fn;
+else if(['分类','category','交易分类'].includes(fl))fmap.category=fn;
+else if(['描述','description','备注','摘要','商品说明','交易说明','商品','用途'].includes(fl))fmap.description=fn;
+else if(['标签','tags','tag'].includes(fl))fmap.tags=fn;
+else if(fl.includes('收/支')||fl==='收/付款方式'){}
+else if(fl.includes('金额')&&fmap.amount===undefined)fmap.amount=fn;
+else if(fl.includes('对方')&&fmap.payee===undefined)fmap.payee=fn});
 
-function parseCSVLine(line) {
-  const result = [];
-  let cur = '', inQuote = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuote) {
-      if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
-      else if (ch === '"') { inQuote = false; }
-      else { cur += ch; }
-    } else {
-      if (ch === '"') { inQuote = true; }
-      else if (ch === ',') { result.push(cur); cur = ''; }
-      else { cur += ch; }
+let imp=0,skp=0;
+for(const row of rows){
+  try{
+    let d=fmap.date?String(row[fmap.date]||'').trim():'';
+    let a=fmap.amount?String(row[fmap.amount]||'').trim().replace(/[¥￥,\s]/g,''):'';
+    // Handle Date objects from XLSX
+    if(d instanceof Date||row[fmap.date] instanceof Date){
+      const dt=row[fmap.date];
+      if(dt instanceof Date)d=dt.toISOString().slice(0,10);
     }
-  }
-  result.push(cur);
-  return result;
+    if(!d||!a||isNaN(parseFloat(a))){skp++;continue}
+    d=String(d).replace(/\//g,'-').slice(0,10);
+    if(!/^\d{4}-\d{2}-\d{2}/.test(d)){skp++;continue}d=d.slice(0,10);
+    let amt=parseFloat(a);
+    const payee=fmap.payee?String(row[fmap.payee]||'').trim():'';
+    let cat=fmap.category?String(row[fmap.category]||'').trim():'';
+    const desc=fmap.description?String(row[fmap.description]||'').trim():'';
+    const tags=fmap.tags?String(row[fmap.tags]||'').trim():'';
+    const{category,tags:at}=await applyRules(payee,desc,cat,tags);
+    await dbAdd('transactions',{date:d,amount:amt,payee,category,description:desc,tags:at||tags,type:amt>0?'income':'expense',created_at:new Date().toISOString()});
+    imp++;
+  }catch(e){skp++}
 }
+$('#upload-msg').style.display='block';
+$('#upload-msg').innerHTML=`<p style="font-weight:700;font-size:15px">导入完成</p>
+<p style="margin-top:6px;color:var(--t2)">成功导入 <strong style="color:var(--g2)">${imp}</strong> 笔交易${skp?`，跳过 ${skp} 条`:''}</p>`;
+toast(`成功导入 ${imp} 笔`);loadMonths()}
 
-// ════════════════════════════════════════════
+function parseCSVLine(line){const r=[];let c='',q=false;
+for(let i=0;i<line.length;i++){const ch=line[i];
+if(q){if(ch==='"'&&line[i+1]==='"'){c+='"';i++}else if(ch==='"')q=false;else c+=ch}
+else{if(ch==='"')q=true;else if(ch===','){r.push(c);c=''}else c+=ch}}r.push(c);return r}
+
+// ══════════════════════════════════════════
 // Add Transaction
-// ════════════════════════════════════════════
-async function submitTx() {
-  const date = $('#tx-date').value;
-  const amtStr = $('#tx-amt').value;
-  const payee = $('#tx-payee').value.trim();
-  const desc = $('#tx-desc').value.trim();
-  const curCat = $('#tx-cat').value.trim();
-  const curTags = $('#tx-tags').value.trim();
+// ══════════════════════════════════════════
+async function submitTx(){
+const date=$('#tx-date').value,as=$('#tx-amt').value,py=$('#tx-payee').value.trim(),
+ds=$('#tx-desc').value.trim(),cc=$('#tx-cat').value.trim(),ct=$('#tx-tags').value.trim();
+if(!date||!as){toast('请填写日期和金额');return}
+const amt=parseFloat(as);if(isNaN(amt)){toast('金额格式错误');return}
+const{category,tags}=await applyRules(py,ds,cc,ct);
+await dbAdd('transactions',{date,amount:amt,payee:py,category,description:ds,tags:tags||ct,type:amt>0?'income':'expense',created_at:new Date().toISOString()});
+closeModal('m-tx');toast('记账成功');
+$('#tx-amt').value='';$('#tx-payee').value='';$('#tx-desc').value='';$('#tx-cat').value='';$('#tx-tags').value='';loadReport()}
 
-  if (!date || !amtStr) { toast('Fill date and amount'); return; }
-  const amt = parseFloat(amtStr);
-  if (isNaN(amt)) { toast('Invalid amount'); return; }
-
-  const { category, tags } = await applyRules(payee, desc, curCat, curTags);
-  const tp = amt > 0 ? 'income' : 'expense';
-
-  await dbAdd('transactions', {
-    date, amount: amt, payee, category, description: desc,
-    tags: tags || curTags, type: tp,
-    created_at: new Date().toISOString()
-  });
-
-  closeModal('m-tx');
-  toast('Saved!');
-  $('#tx-amt').value = ''; $('#tx-payee').value = ''; $('#tx-desc').value = '';
-  $('#tx-cat').value = ''; $('#tx-tags').value = '';
-  loadReport();
-}
-
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
 // Budgets
-// ════════════════════════════════════════════
-async function loadBudgets() {
-  await loadMonths();
-  const m = $('#bgt-m').value || curMonth || new Date().toISOString().slice(0, 7);
-  const budgets = await dbGetAll('budgets');
-  const txns = (await dbGetAll('transactions')).filter(t => t.date.startsWith(m) && t.amount < 0);
+// ══════════════════════════════════════════
+async function loadBudgets(){
+await loadMonths();const m=$('#bgt-m').value||curMonth||new Date().toISOString().slice(0,7);
+const bs=await dbAll('budgets');
+const txns=(await dbAll('transactions')).filter(t=>t.date.startsWith(m)&&t.amount<0);
+const sm={};for(const t of txns)sm[t.category]=(sm[t.category]||0)+Math.abs(t.amount);
+const data=bs.map(b=>{const s=sm[b.category]||0;return{...b,spent:Math.round(s*100)/100,
+rem:Math.round((b.monthly_limit-s)*100)/100,pct:b.monthly_limit>0?Math.round(s/b.monthly_limit*1000)/10:0}})
+.sort((a,b)=>b.monthly_limit-a.monthly_limit);
+$('#bgt-empty').style.display=data.length?'none':'block';
+$('#bgt-list').innerHTML=data.map(b=>{const cls=b.pct>100?'r':b.pct>75?'w':'g';
+return`<div class="budget-card"><div class="top"><span class="cat">${b.category}</span>
+<span class="nums">${fmt(b.spent)} / ${fmt(b.monthly_limit)} <span class="del-btn" onclick="delBgt(${b.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></span></div>
+<div class="bar"><div class="fill ${cls}" style="width:${Math.min(b.pct,100)}%"></div></div>
+${b.rem<0?`<p style="color:var(--r2);font-size:11px;margin-top:6px;font-weight:600">超支 ${fmt(Math.abs(b.rem))}</p>`:
+b.rem>0?`<p style="color:var(--g2);font-size:11px;margin-top:6px">剩余 ${fmt(b.rem)}</p>`:''}</div>`}).join('')}
+async function submitBgt(){const cat=$('#bgt-cat').value.trim(),lim=parseFloat($('#bgt-lim').value);
+if(!cat||isNaN(lim)||lim<=0){toast('请填写分类和金额');return}
+const ex=await dbAll('budgets');const dup=ex.find(b=>b.category===cat);
+if(dup){dup.monthly_limit=lim;await dbPut('budgets',dup)}else await dbAdd('budgets',{category:cat,monthly_limit:lim});
+closeModal('m-bgt');toast('预算已设置');$('#bgt-cat').value='';$('#bgt-lim').value='';loadBudgets()}
+async function delBgt(id){if(!confirm('删除此预算？'))return;await dbDel('budgets',id);toast('已删除');loadBudgets()}
 
-  const spentMap = {};
-  for (const t of txns) {
-    spentMap[t.category] = (spentMap[t.category] || 0) + Math.abs(t.amount);
-  }
+// ══════════════════════════════════════════
+// Rules & Tags
+// ══════════════════════════════════════════
+async function loadMore(){
+const rules=(await dbAll('rules')).sort((a,b)=>(b.priority||0)-(a.priority||0));
+$('#rule-list').innerHTML=rules.map(r=>`<div class="list-item">
+<div class="left"><div class="payee">${r.keyword}</div>
+<div class="meta"><span class="badge badge-c">${r.target_category||'-'}</span>
+<span class="badge badge-t">${r.target_tag||'-'}</span>
+<span style="font-size:10px;color:var(--t3)">P${r.priority||0}</span></div></div>
+<span class="del-btn" onclick="delRule(${r.id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>`).join('');
+const txns=await dbAll('transactions');const tm={};
+for(const t of txns)if(t.tags)t.tags.split(',').forEach(x=>{x=x.trim();if(x)tm[x]=(tm[x]||0)+1});
+const tags=Object.entries(tm).map(([t,c])=>({tag:t,count:c})).sort((a,b)=>b.count-a.count);
+$('#tags-cloud').innerHTML=tags.length?tags.map(t=>`<span class="tag-chip" onclick="filterTag('${t.tag.replace(/'/g,"\\'")}',this)">${t.tag} <span style="opacity:.5">${t.count}</span></span>`).join(''):'<p style="color:var(--t3);font-size:13px">暂无标签</p>'}
+async function submitRule(){const kw=$('#rule-kw').value.trim();if(!kw){toast('请输入关键词');return}
+await dbAdd('rules',{keyword:kw,target_category:$('#rule-cat').value.trim(),target_tag:$('#rule-tag').value.trim(),priority:parseInt($('#rule-pri').value)||5});
+closeModal('m-rule');toast('规则已添加');$('#rule-kw').value='';$('#rule-cat').value='';$('#rule-tag').value='';$('#rule-pri').value='5';loadMore()}
+async function delRule(id){if(!confirm('删除此规则？'))return;await dbDel('rules',id);toast('已删除');loadMore()}
+async function filterTag(tag,el){$$('.tag-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');
+const txns=(await dbAll('transactions')).filter(t=>t.tags?.includes(tag));
+txns.sort((a,b)=>b.date.localeCompare(a.date));$('#tag-records').style.display='block';$('#tag-title').textContent=tag;
+$('#tag-list').innerHTML=txns.map(t=>`<div class="list-item"><div class="left"><div class="payee">${t.payee||'-'}</div>
+<div class="meta"><span class="badge badge-c">${t.category}</span>${t.date}</div></div>
+<div class="amt ${t.amount<0?'r':'g'}">${fmt(t.amount)}</div></div>`).join('')}
 
-  const data = budgets.map(b => {
-    const spent = spentMap[b.category] || 0;
-    return {
-      ...b,
-      spent: Math.round(spent * 100) / 100,
-      remaining: Math.round((b.monthly_limit - spent) * 100) / 100,
-      percent: b.monthly_limit > 0 ? Math.round(spent / b.monthly_limit * 1000) / 10 : 0
-    };
-  }).sort((a, b) => b.monthly_limit - a.monthly_limit);
+// ══════════════════════════════════════════
+// Export CSV
+// ══════════════════════════════════════════
+async function exportCSV(){const m=$('#rpt-m')?.value||'';let txns=await dbAll('transactions');
+if(m)txns=txns.filter(t=>t.date.startsWith(m));txns.sort((a,b)=>b.date.localeCompare(a.date));
+const h=['日期','金额','商家','分类','备注','标签','类型'];
+const rows=txns.map(t=>[t.date,t.amount,t.payee,t.category,t.description,t.tags,t.type]);
+const csv=[h,...rows].map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);
+const a=document.createElement('a');a.href=url;a.download=`firefly_${m||'all'}.csv`;a.click();URL.revokeObjectURL(url);toast('导出成功')}
 
-  $('#bgt-empty').style.display = data.length ? 'none' : 'block';
-  $('#bgt-list').innerHTML = data.map(b => {
-    const cls = b.percent > 100 ? 'r' : b.percent > 75 ? 'w' : 'g';
-    return `<div class="budget-card"><div class="top"><span class="cat">${b.category}</span>
-      <span class="nums">${fmt(b.spent)}/${fmt(b.monthly_limit)} <span class="del-btn" onclick="delBgt(${b.id})">&#10005;</span></span></div>
-      <div class="bar"><div class="fill ${cls}" style="width:${Math.min(b.percent, 100)}%"></div></div>
-      ${b.remaining < 0 ? `<p style="color:var(--r);font-size:11px;margin-top:4px">Over budget by ${fmt(Math.abs(b.remaining))}</p>` : ''}</div>`;
-  }).join('');
-}
-
-async function submitBgt() {
-  const cat = $('#bgt-cat').value.trim();
-  const lim = parseFloat($('#bgt-lim').value);
-  if (!cat || isNaN(lim) || lim <= 0) { toast('Fill category and limit'); return; }
-
-  // Check if budget for this category already exists
-  const existing = await dbGetAll('budgets');
-  const dup = existing.find(b => b.category === cat);
-  if (dup) {
-    dup.monthly_limit = lim;
-    await dbPut('budgets', dup);
-  } else {
-    await dbAdd('budgets', { category: cat, monthly_limit: lim });
-  }
-
-  closeModal('m-bgt');
-  toast('Budget set!');
-  $('#bgt-cat').value = ''; $('#bgt-lim').value = '';
-  loadBudgets();
-}
-
-async function delBgt(id) {
-  if (!confirm('Delete this budget?')) return;
-  await dbDelete('budgets', id);
-  toast('Deleted');
-  loadBudgets();
-}
-
-// ════════════════════════════════════════════
-// Rules & Tags (More page)
-// ════════════════════════════════════════════
-async function loadMore() {
-  // Rules
-  const rules = (await dbGetAll('rules')).sort((a, b) => (b.priority || 0) - (a.priority || 0));
-  $('#rule-list').innerHTML = rules.map(r => `<div class="list-item">
-    <div class="left"><div class="payee">${r.keyword}</div>
-    <div class="meta"><span class="badge badge-c">${r.target_category || '-'}</span>
-    <span class="badge badge-t">${r.target_tag || '-'}</span>
-    <span style="font-size:10px;color:var(--t2)">P${r.priority || 0}</span></div></div>
-    <span class="del-btn" onclick="delRule(${r.id})">&#10005;</span></div>`).join('');
-
-  // Tags
-  const txns = await dbGetAll('transactions');
-  const tagMap = {};
-  for (const t of txns) {
-    if (t.tags) {
-      t.tags.split(',').forEach(tg => {
-        tg = tg.trim();
-        if (tg) tagMap[tg] = (tagMap[tg] || 0) + 1;
-      });
-    }
-  }
-  const tags = Object.entries(tagMap).map(([tag, count]) => ({ tag, count })).sort((a, b) => b.count - a.count);
-  $('#tags-cloud').innerHTML = tags.length ? tags.map(t =>
-    `<span class="tag-chip" onclick="filterTag('${t.tag.replace(/'/g,"\\'")}',this)">${t.tag} (${t.count})</span>`
-  ).join('') : '<p style="color:var(--t2);font-size:13px">No tags yet</p>';
-}
-
-async function submitRule() {
-  const kw = $('#rule-kw').value.trim();
-  if (!kw) { toast('Enter keyword'); return; }
-  await dbAdd('rules', {
-    keyword: kw,
-    target_category: $('#rule-cat').value.trim(),
-    target_tag: $('#rule-tag').value.trim(),
-    priority: parseInt($('#rule-pri').value) || 5
-  });
-  closeModal('m-rule');
-  toast('Rule added');
-  $('#rule-kw').value = ''; $('#rule-cat').value = ''; $('#rule-tag').value = ''; $('#rule-pri').value = '5';
-  loadMore();
-}
-
-async function delRule(id) {
-  if (!confirm('Delete this rule?')) return;
-  await dbDelete('rules', id);
-  toast('Deleted');
-  loadMore();
-}
-
-async function filterTag(tag, el) {
-  $$('.tag-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  const txns = (await dbGetAll('transactions')).filter(t => t.tags && t.tags.includes(tag));
-  txns.sort((a, b) => b.date.localeCompare(a.date));
-  $('#tag-records').style.display = 'block';
-  $('#tag-title').textContent = tag;
-  $('#tag-list').innerHTML = txns.map(t => `<div class="list-item"><div class="left"><div class="payee">${t.payee || '-'}</div>
-    <div class="meta"><span class="badge badge-c">${t.category}</span>${t.date}</div></div>
-    <div class="amt ${t.amount < 0 ? 'r' : 'g'}">${fmt(t.amount)}</div></div>`).join('');
-}
-
-// ════════════════════════════════════════════
-// CSV Export
-// ════════════════════════════════════════════
-async function exportCSV() {
-  const m = $('#rpt-m')?.value || '';
-  let txns = await dbGetAll('transactions');
-  if (m) txns = txns.filter(t => t.date.startsWith(m));
-  txns.sort((a, b) => b.date.localeCompare(a.date));
-
-  const header = ['Date','Amount','Payee','Category','Description','Tags','Type'];
-  const rows = txns.map(t => [t.date, t.amount, t.payee, t.category, t.description, t.tags, t.type]);
-  const csv = [header, ...rows].map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n');
-
-  const BOM = '\uFEFF';
-  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `firefly_export_${m || 'all'}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('Exported!');
-}
-
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
 // Sample Data
-// ════════════════════════════════════════════
-async function loadSampleData() {
-  if (!confirm('Load 33 demo transactions for June 2025?')) return;
-  const samples = [
-    {date:'2025-06-01',amount:-2500,payee:'房东',category:'住房',description:'月租',tags:'固定支出',type:'expense'},
-    {date:'2025-06-01',amount:15000,payee:'公司',category:'工资',description:'6月工资',tags:'固定收入',type:'income'},
-    {date:'2025-06-02',amount:-18,payee:'美团外卖',category:'餐饮',description:'午餐',tags:'工作餐',type:'expense'},
-    {date:'2025-06-03',amount:-5,payee:'地铁',category:'交通',description:'通勤',tags:'通勤',type:'expense'},
-    {date:'2025-06-04',amount:-35,payee:'星巴克',category:'餐饮',description:'拿铁',tags:'摸鱼',type:'expense'},
-    {date:'2025-06-05',amount:-68,payee:'盒马',category:'餐饮',description:'买菜',tags:'买菜',type:'expense'},
-    {date:'2025-06-06',amount:-15,payee:'滴滴',category:'交通',description:'加班打车',tags:'通勤',type:'expense'},
-    {date:'2025-06-07',amount:-128,payee:'海底捞',category:'餐饮',description:'朋友聚餐',tags:'社交',type:'expense'},
-    {date:'2025-06-08',amount:-45,payee:'电影',category:'娱乐',description:'周末看电影',tags:'周末',type:'expense'},
-    {date:'2025-06-09',amount:-22,payee:'美团外卖',category:'餐饮',description:'午餐',tags:'工作餐',type:'expense'},
-    {date:'2025-06-10',amount:-299,payee:'京东',category:'购物',description:'日用品',tags:'日用',type:'expense'},
-    {date:'2025-06-11',amount:-15,payee:'瑞幸',category:'餐饮',description:'咖啡',tags:'摸鱼',type:'expense'},
-    {date:'2025-06-12',amount:-5,payee:'地铁',category:'交通',description:'通勤',tags:'通勤',type:'expense'},
-    {date:'2025-06-13',amount:-198,payee:'健身',category:'健身',description:'月卡',tags:'健康',type:'expense'},
-    {date:'2025-06-14',amount:-56,payee:'叮咚买菜',category:'餐饮',description:'周末买菜',tags:'买菜',type:'expense'},
-    {date:'2025-06-15',amount:-200,payee:'红包',category:'礼金',description:'生日红包',tags:'礼金',type:'expense'},
-    {date:'2025-06-16',amount:-25,payee:'美团外卖',category:'餐饮',description:'晚餐',tags:'工作餐',type:'expense'},
-    {date:'2025-06-17',amount:-12,payee:'得到',category:'学习',description:'课程订阅',tags:'订阅',type:'expense'},
-    {date:'2025-06-18',amount:-15,payee:'网易云',category:'娱乐',description:'会员',tags:'订阅',type:'expense'},
-    {date:'2025-06-19',amount:-5,payee:'地铁',category:'交通',description:'通勤',tags:'通勤',type:'expense'},
-    {date:'2025-06-20',amount:-380,payee:'淘宝',category:'购物',description:'衣服',tags:'购物',type:'expense'},
-    {date:'2025-06-21',amount:-42,payee:'美团外卖',category:'餐饮',description:'周末外卖',tags:'工作餐',type:'expense'},
-    {date:'2025-06-22',amount:-5,payee:'地铁',category:'交通',description:'通勤',tags:'通勤',type:'expense'},
-    {date:'2025-06-23',amount:-30,payee:'星巴克',category:'餐饮',description:'下午茶',tags:'摸鱼',type:'expense'},
-    {date:'2025-06-24',amount:-350,payee:'加油',category:'交通',description:'加油',tags:'通勤',type:'expense'},
-    {date:'2025-06-25',amount:-18,payee:'美团外卖',category:'餐饮',description:'午餐',tags:'工作餐',type:'expense'},
-    {date:'2025-06-25',amount:500,payee:'微信红包',category:'礼金',description:'生日收到的红包',tags:'礼金',type:'income'},
-    {date:'2025-06-26',amount:-89,payee:'Apple',category:'数码',description:'iCloud订阅',tags:'订阅',type:'expense'},
-    {date:'2025-06-27',amount:-20,payee:'美团外卖',category:'餐饮',description:'午餐',tags:'工作餐',type:'expense'},
-    {date:'2025-06-28',amount:-75,payee:'盒马',category:'餐饮',description:'买菜',tags:'买菜',type:'expense'},
-    {date:'2025-06-29',amount:-60,payee:'电影',category:'娱乐',description:'看电影',tags:'周末',type:'expense'},
-    {date:'2025-06-30',amount:-16,payee:'美团外卖',category:'餐饮',description:'月末晚餐',tags:'工作餐',type:'expense'},
-    {date:'2025-06-30',amount:2000,payee:'公司',category:'工资',description:'绩效奖金',tags:'固定收入',type:'income'},
-  ];
-  for (const s of samples) {
-    await dbAdd('transactions', { ...s, created_at: new Date().toISOString() });
-  }
-  // Also add sample budgets
-  const existingBgt = await dbGetAll('budgets');
-  if (existingBgt.length === 0) {
-    await dbAdd('budgets', { category: '餐饮', monthly_limit: 2000 });
-    await dbAdd('budgets', { category: '交通', monthly_limit: 500 });
-    await dbAdd('budgets', { category: '购物', monthly_limit: 1000 });
-    await dbAdd('budgets', { category: '娱乐', monthly_limit: 300 });
-  }
-  toast('Demo data loaded!');
-  loadMonths();
-  loadReport();
-}
+// ══════════════════════════════════════════
+async function loadSampleData(){
+if(!confirm('加载 33 条 2025年6月 的示例数据？'))return;
+const S=[{date:'2025-06-01',amount:-2500,payee:'房东',category:'住房',description:'月租',tags:'固定支出',type:'expense'},
+{date:'2025-06-01',amount:15000,payee:'公司',category:'工资',description:'6月工资',tags:'固定收入',type:'income'},
+{date:'2025-06-02',amount:-18,payee:'美团外卖',category:'餐饮',description:'午餐',tags:'工作餐',type:'expense'},
+{date:'2025-06-03',amount:-5,payee:'地铁',category:'交通',description:'通勤',tags:'通勤',type:'expense'},
+{date:'2025-06-04',amount:-35,payee:'星巴克',category:'餐饮',description:'拿铁',tags:'摸鱼',type:'expense'},
+{date:'2025-06-05',amount:-68,payee:'盒马',category:'餐饮',description:'买菜',tags:'买菜',type:'expense'},
+{date:'2025-06-06',amount:-15,payee:'滴滴',category:'交通',description:'加班打车',tags:'通勤',type:'expense'},
+{date:'2025-06-07',amount:-128,payee:'海底捞',category:'餐饮',description:'朋友聚餐',tags:'社交',type:'expense'},
+{date:'2025-06-08',amount:-45,payee:'万达影城',category:'娱乐',description:'看电影',tags:'周末',type:'expense'},
+{date:'2025-06-09',amount:-22,payee:'美团外卖',category:'餐饮',description:'午餐',tags:'工作餐',type:'expense'},
+{date:'2025-06-10',amount:-299,payee:'京东',category:'购物',description:'日用品',tags:'日用',type:'expense'},
+{date:'2025-06-11',amount:-15,payee:'瑞幸咖啡',category:'餐饮',description:'咖啡',tags:'摸鱼',type:'expense'},
+{date:'2025-06-12',amount:-5,payee:'地铁',category:'交通',description:'通勤',tags:'通勤',type:'expense'},
+{date:'2025-06-13',amount:-198,payee:'健身房',category:'健身',description:'月卡',tags:'健康',type:'expense'},
+{date:'2025-06-14',amount:-56,payee:'叮咚买菜',category:'餐饮',description:'买菜',tags:'买菜',type:'expense'},
+{date:'2025-06-15',amount:-200,payee:'微信红包',category:'礼金',description:'生日红包',tags:'礼金',type:'expense'},
+{date:'2025-06-16',amount:-25,payee:'美团外卖',category:'餐饮',description:'晚餐',tags:'工作餐',type:'expense'},
+{date:'2025-06-17',amount:-12,payee:'得到App',category:'学习',description:'课程订阅',tags:'订阅',type:'expense'},
+{date:'2025-06-18',amount:-15,payee:'网易云音乐',category:'娱乐',description:'会员',tags:'订阅',type:'expense'},
+{date:'2025-06-19',amount:-5,payee:'地铁',category:'交通',description:'通勤',tags:'通勤',type:'expense'},
+{date:'2025-06-20',amount:-380,payee:'淘宝',category:'购物',description:'衣服',tags:'购物',type:'expense'},
+{date:'2025-06-21',amount:-42,payee:'美团外卖',category:'餐饮',description:'周末外卖',tags:'工作餐',type:'expense'},
+{date:'2025-06-22',amount:-5,payee:'地铁',category:'交通',description:'通勤',tags:'通勤',type:'expense'},
+{date:'2025-06-23',amount:-30,payee:'星巴克',category:'餐饮',description:'下午茶',tags:'摸鱼',type:'expense'},
+{date:'2025-06-24',amount:-350,payee:'中石化',category:'交通',description:'加油',tags:'通勤',type:'expense'},
+{date:'2025-06-25',amount:-18,payee:'美团外卖',category:'餐饮',description:'午餐',tags:'工作餐',type:'expense'},
+{date:'2025-06-25',amount:500,payee:'微信红包',category:'礼金',description:'生日收到的红包',tags:'礼金',type:'income'},
+{date:'2025-06-26',amount:-89,payee:'Apple',category:'数码',description:'iCloud订阅',tags:'订阅',type:'expense'},
+{date:'2025-06-27',amount:-20,payee:'美团外卖',category:'餐饮',description:'午餐',tags:'工作餐',type:'expense'},
+{date:'2025-06-28',amount:-75,payee:'盒马鲜生',category:'餐饮',description:'买菜',tags:'买菜',type:'expense'},
+{date:'2025-06-29',amount:-60,payee:'万达影城',category:'娱乐',description:'看电影',tags:'周末',type:'expense'},
+{date:'2025-06-30',amount:-16,payee:'美团外卖',category:'餐饮',description:'月末晚餐',tags:'工作餐',type:'expense'},
+{date:'2025-06-30',amount:2000,payee:'公司',category:'工资',description:'绩效奖金',tags:'固定收入',type:'income'}];
+for(const s of S)await dbAdd('transactions',{...s,created_at:new Date().toISOString()});
+const eb=await dbAll('budgets');if(!eb.length){
+await dbAdd('budgets',{category:'餐饮',monthly_limit:2000});
+await dbAdd('budgets',{category:'交通',monthly_limit:500});
+await dbAdd('budgets',{category:'购物',monthly_limit:1000});
+await dbAdd('budgets',{category:'娱乐',monthly_limit:300})}
+toast('示例数据已加载');loadMonths();loadReport()}
 
-// ════════════════════════════════════════════
-// Clear All Data
-// ════════════════════════════════════════════
-async function clearAllData() {
-  if (!confirm('This will delete ALL transactions, rules, and budgets. Continue?')) return;
-  if (!confirm('Are you sure? This cannot be undone.')) return;
-  await dbClear('transactions');
-  await dbClear('budgets');
-  await dbClear('rules');
-  await initDefaultRules();
-  toast('All data cleared');
-  loadReport();
-}
+// ══════════════════════════════════════════
+// Clear Data
+// ══════════════════════════════════════════
+async function clearAllData(){
+if(!confirm('将清除所有数据，不可恢复，确定？'))return;
+await dbClear('transactions');await dbClear('budgets');await dbClear('rules');
+await initRules();toast('数据已清除');loadReport()}
 
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
 // PWA Install
-// ════════════════════════════════════════════
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  $('#install-banner').classList.add('show');
-});
-async function installApp() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  $('#install-banner').classList.remove('show');
-}
+// ══════════════════════════════════════════
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('#install-banner').classList.add('show')});
+async function installApp(){if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('#install-banner').classList.remove('show')}
 
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
 // Init
-// ════════════════════════════════════════════
-async function init() {
-  await openDB();
-  await initDefaultRules();
-  await loadMonths();
-  $('#tx-date').valueAsDate = new Date();
-  loadReport();
-
-  // Register service worker
-  if ('serviceWorker' in navigator) {
-    try {
-      await navigator.serviceWorker.register('sw.js');
-    } catch (e) {
-      // SW registration may fail on file:// protocol - that's OK
-    }
-  }
-}
+// ══════════════════════════════════════════
+async function init(){await openDB();await initRules();await loadMonths();
+$('#tx-date').valueAsDate=new Date();loadReport();
+if('serviceWorker'in navigator)try{await navigator.serviceWorker.register('sw.js')}catch(e){}}
 init();
 </script>
 </body>
