@@ -1,9 +1,9 @@
 const CACHE_NAME = 'firefly-lite-v2';
-const OFFLINE_URL = '/';
+const OFFLINE_URL = './';
 
 const PRECACHE_URLS = [
-  '/',
-  '/manifest.json',
+  './',
+  './manifest.json',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'
 ];
 
